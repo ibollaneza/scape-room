@@ -97,34 +97,85 @@
         let timer;
         let time = 0;
         let currentWallet = null;
+        let attempts = 0;
+        const maxAttempts = 3;
+        let correctAnswersCount = 0;
+        const requiredCorrectAnswers = 2;
         const puzzles = [
             {
                 question: "What has keys but can't open locks?",
-                answer: "keyboard"
+                answers: ["keyboard", "piano"]
             },
             {
                 question: "What has a head, a tail, is brown, and has no legs?",
-                answer: "penny"
+                answers: ["penny", "coin"]
             },
             {
                 question: "What comes once in a minute, twice in a moment, but never in a thousand years?",
-                answer: "m"
+                answers: ["m"]
             },
             {
                 question: "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?",
-                answer: "echo"
+                answers: ["echo"]
             },
             {
                 question: "You measure my life in hours and I serve you by expiring. I'm quick when I'm thin and slow when I'm fat. The wind is my enemy. What am I?",
-                answer: "candle"
+                answers: ["candle"]
+            },
+            {
+                question: "I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?",
+                answers: ["map"]
+            },
+            {
+                question: "What is seen in the middle of March and April that can't be seen at the beginning or end of either month?",
+                answers: ["r"]
+            },
+            {
+                question: "You see a boat filled with people. It has not sunk, but when you look again you don't see a single person on the boat. Why?",
+                answers: ["all the people were married", "they are married"]
+            },
+            {
+                question: "You see me once in June, twice in November and not at all in May. What am I?",
+                answers: ["e"]
+            },
+            {
+                question: "What can travel around the world while staying in a corner?",
+                answers: ["stamp"]
+            },
+            {
+                question: "What gets wetter the more it dries?",
+                answers: ["towel"]
+            },
+            {
+                question: "What has to be broken before you can use it?",
+                answers: ["egg"]
+            },
+            {
+                question: "I’m tall when I’m young, and I’m short when I’m old. What am I?",
+                answers: ["candle"]
+            },
+            {
+                question: "What month of the year has 28 days?",
+                answers: ["all of them", "all months"]
+            },
+            {
+                question: "What is full of holes but still holds water?",
+                answers: ["sponge"]
+            },
+            {
+                question: "What question can you never answer yes to?",
+                answers: ["are you asleep", "are you dead"]
             }
         ];
 
-        let generatedImages = {}; // Object to track generated images for each wallet
+        let selectedPuzzles = [];
+        let currentPuzzleIndex = 0;
+        let generatedImages = {};
 
         function startGame() {
             document.getElementById('start-button').style.display = 'none';
-            document.getElementById('message').textContent = 'Solve the puzzle to escape! If you win you will receive an unique image';
+            document.getElementById('message').textContent = 'Solve the puzzle to escape!';
+            selectRandomPuzzles();
             loadPuzzle(0);
             startTimer();
         }
@@ -142,8 +193,16 @@
             return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
+        function selectRandomPuzzles() {
+            selectedPuzzles = [];
+            const shuffled = puzzles.sort(() => 0.5 - Math.random());
+            selectedPuzzles = shuffled.slice(0, 5); // Select 5 random puzzles to ensure enough questions for 2 correct answers
+        }
+
         function loadPuzzle(index) {
-            const puzzle = puzzles[index];
+            attempts = 0;
+            currentPuzzleIndex = index;
+            const puzzle = selectedPuzzles[index];
             const puzzleContainer = document.getElementById('puzzle-container');
             puzzleContainer.innerHTML = `
                 <div>${puzzle.question}</div>
@@ -154,20 +213,34 @@
 
         function checkAnswer(index) {
             const answer = document.getElementById('answer').value.trim().toLowerCase();
-            if (answer === puzzles[index].answer.toLowerCase()) {
-                if (index + 1 < puzzles.length) {
+            const correctAnswers = selectedPuzzles[index].answers;
+            if (correctAnswers.includes(answer)) {
+                correctAnswersCount++;
+                if (correctAnswersCount >= requiredCorrectAnswers) {
+                    loadMiniGame();
+                } else if (index + 1 < selectedPuzzles.length) {
                     loadPuzzle(index + 1);
                 } else {
-                    loadMiniGame();
+                    document.getElementById('message').textContent = 'You need to answer more questions correctly to access the mini-game.';
                 }
             } else {
-                document.getElementById('message').textContent = 'Incorrect! Try again.';
+                attempts++;
+                if (attempts >= maxAttempts) {
+                    document.getElementById('message').textContent = 'Incorrect! Moving to the next question.';
+                    if (index + 1 < selectedPuzzles.length) {
+                        loadPuzzle(index + 1);
+                    } else {
+                        document.getElementById('message').textContent = 'You need to answer more questions correctly to access the mini-game.';
+                    }
+                } else {
+                    document.getElementById('message').textContent = `Incorrect! You have ${maxAttempts - attempts} attempts left.`;
+                }
             }
         }
 
         function loadMiniGame() {
             clearInterval(timer);
-            document.getElementById('message').textContent = 'Congratulations! You solved all the riddles! Now play this mini-game!';
+            document.getElementById('message').textContent = 'Congratulations! You solved enough riddles! Now play this mini-game!';
             document.getElementById('puzzle-container').innerHTML = `
                 <div id="mini-game">
                     <h3>Click the button as many times as you can in 10 seconds!</h3>
@@ -214,18 +287,20 @@
             }
 
             const koalaImages = [
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/5830d945982af65d123b7aaeac951a781436ae94/image%20(1).jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/image%20(2).jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/image%20(3).jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/image%20(4).jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%201.jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%202.jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%203.jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%204.jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%205.jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%206.jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%207.jpg',
-                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%208.jpg'
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/3.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/4.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/6.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/7.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/78.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/e.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/image%20(4).jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/image%20(5).jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/image%20(6).jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/image%20(7).jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/image%20(8).jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/q.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/r.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/scape-room/df218b008538494ffa69a5436242371801a11b43/w.jpg'
             ];
             const randomIndex = Math.floor(Math.random() * koalaImages.length);
             const koalaImage = document.getElementById("koala-image");
