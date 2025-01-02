@@ -1,0 +1,49 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #222;
+    color: #fff;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+#game-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+    background-color: #333;
+    border-radius: 10px;
+}
+
+h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+#timer {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+#message {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+#puzzle-container {
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #444;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+}
+
+button:hover {
+    background-color: #555;
+}
