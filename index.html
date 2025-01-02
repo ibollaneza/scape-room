@@ -4,18 +4,245 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Virtual Escape Room</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a1a1a;
+            color: #f1f1f1;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #game-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        #timer {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        #message {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        #puzzle-container {
+            margin-bottom: 20px;
+        }
+
+        #image-container {
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #444;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 1em;
+            width: calc(100% - 22px);
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
     <div id="game-container">
         <h1>Virtual Escape Room</h1>
-        <div id="timer">Time: <span id="time">00:00</span></div>
+        
+        <div id="wallet-container">
+            <h2>Enter Your Solana Wallet</h2>
+            <input type="text" id="wallet" placeholder="Enter your wallet address">
+            <button onclick="verifyWallet()">Submit</button>
+        </div>
+
+        <div id="timer" style="display: none;">Time: <span id="time">00:00</span></div>
         <div id="message">Solve the puzzle to escape!</div>
         <div id="puzzle-container">
             <!-- Puzzle content will be loaded here -->
         </div>
-        <button id="start-button">Start Game</button>
+        
+        <div id="image-container">
+            <img id="koala-image" src="" alt="Koala Image" style="display: none;">
+        </div>
+        
+        <button id="start-button" style="display:none;" onclick="generateImage()">Generate Image</button>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        let timer;
+        let time = 0;
+        let currentWallet = null;
+        const puzzles = [
+            {
+                question: "What has keys but can't open locks?",
+                answer: "keyboard"
+            },
+            {
+                question: "What has a head, a tail, is brown, and has no legs?",
+                answer: "penny"
+            },
+            {
+                question: "What comes once in a minute, twice in a moment, but never in a thousand years?",
+                answer: "m"
+            },
+            {
+                question: "I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?",
+                answer: "echo"
+            },
+            {
+                question: "You measure my life in hours and I serve you by expiring. I'm quick when I'm thin and slow when I'm fat. The wind is my enemy. What am I?",
+                answer: "candle"
+            }
+        ];
+
+        let generatedImages = {}; // Object to track generated images for each wallet
+
+        function startGame() {
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('message').textContent = 'Solve the puzzle to escape! If you win you will receive an unique image';
+            loadPuzzle(0);
+            startTimer();
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                time++;
+                document.getElementById('time').textContent = formatTime(time);
+            }, 1000);
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function loadPuzzle(index) {
+            const puzzle = puzzles[index];
+            const puzzleContainer = document.getElementById('puzzle-container');
+            puzzleContainer.innerHTML = `
+                <div>${puzzle.question}</div>
+                <input type="text" id="answer" placeholder="Your answer">
+                <button onclick="checkAnswer(${index})">Submit</button>
+            `;
+        }
+
+        function checkAnswer(index) {
+            const answer = document.getElementById('answer').value.trim().toLowerCase();
+            if (answer === puzzles[index].answer.toLowerCase()) {
+                if (index + 1 < puzzles.length) {
+                    loadPuzzle(index + 1);
+                } else {
+                    loadMiniGame();
+                }
+            } else {
+                document.getElementById('message').textContent = 'Incorrect! Try again.';
+            }
+        }
+
+        function loadMiniGame() {
+            clearInterval(timer);
+            document.getElementById('message').textContent = 'Congratulations! You solved all the riddles! Now play this mini-game!';
+            document.getElementById('puzzle-container').innerHTML = `
+                <div id="mini-game">
+                    <h3>Click the button as many times as you can in 10 seconds!</h3>
+                    <button id="click-button" onclick="startMiniGame()">Start</button>
+                    <div id="clicks" style="font-size: 2em; margin-top: 10px;">0</div>
+                </div>
+            `;
+        }
+
+        function startMiniGame() {
+            let clicks = 0;
+            const clickButton = document.getElementById('click-button');
+            const clicksDisplay = document.getElementById('clicks');
+            clickButton.innerHTML = 'Click Me!';
+            clickButton.onclick = () => clicksDisplay.innerHTML = ++clicks;
+            setTimeout(() => {
+                clickButton.disabled = true;
+                document.getElementById('message').textContent = `You clicked ${clicks} times!`;
+                document.getElementById('start-button').style.display = 'block';
+            }, 10000);
+        }
+
+        function verifyWallet() {
+            const wallet = document.getElementById("wallet").value.trim();
+            if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(wallet)) {
+                currentWallet = wallet;
+                document.getElementById('wallet-container').style.display = 'none';
+                document.getElementById('timer').style.display = 'block';
+                if (generatedImages[wallet]) {
+                    showGeneratedImage(wallet);
+                } else {
+                    startGame();
+                }
+            } else {
+                alert("Please enter a valid Solana wallet address.");
+            }
+        }
+
+        function generateImage() {
+            const wallet = currentWallet;
+            if (generatedImages[wallet]) {
+                alert("You have already generated an image.");
+                return;
+            }
+
+            const koalaImages = [
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/5830d945982af65d123b7aaeac951a781436ae94/image%20(1).jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/image%20(2).jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/image%20(3).jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/image%20(4).jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%201.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%202.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%203.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%204.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%205.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%206.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%207.jpg',
+                'https://raw.githubusercontent.com/ibollaneza/adoptakoala/6da9f9e3769d3b4a2bb94905db0618a1750ec711/koala%208.jpg'
+            ];
+            const randomIndex = Math.floor(Math.random() * koalaImages.length);
+            const koalaImage = document.getElementById("koala-image");
+            koalaImage.src = koalaImages[randomIndex];
+            koalaImage.style.display = "block";
+
+            // Save the generated image for this wallet
+            generatedImages[wallet] = koalaImages[randomIndex];
+        }
+
+        function showGeneratedImage(wallet) {
+            const koalaImage = document.getElementById("koala-image");
+            koalaImage.src = generatedImages[wallet];
+            koalaImage.style.display = "block";
+        }
+
+        document.getElementById('start-button').addEventListener('click', generateImage);
+    </script>
 </body>
 </html>
